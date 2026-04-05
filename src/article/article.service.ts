@@ -12,6 +12,7 @@ import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { ArticleStatus } from '../common/enums';
 import { CommentService } from '../comment/comment.service';
+import { paginate, PaginatedResult } from '../common/pagination.dto';
 
 @Injectable()
 export class ArticleService {
@@ -26,7 +27,9 @@ export class ArticleService {
     status?: string;
     categoryId?: string;
     tag?: string;
-  }): Article[] {
+    page?: number;
+    limit?: number;
+  }): Article[] | PaginatedResult<Article> {
     let result = [...this.articles];
 
     if (query.status) {
@@ -39,7 +42,7 @@ export class ArticleService {
       result = result.filter((a) => a.tags.includes(query.tag));
     }
 
-    return result;
+    return paginate(result, query.page, query.limit);
   }
 
   findOne(id: string): Article {

@@ -14,6 +14,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { ArticleQueryDto } from './dto/article-query.dto';
 
 @ApiTags('Articles')
 @Controller('article')
@@ -25,13 +26,11 @@ export class ArticleController {
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'categoryId', required: false })
   @ApiQuery({ name: 'tag', required: false })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200 })
-  findAll(
-    @Query('status') status?: string,
-    @Query('categoryId') categoryId?: string,
-    @Query('tag') tag?: string,
-  ) {
-    return this.articleService.findAll({ status, categoryId, tag });
+  findAll(@Query() query: ArticleQueryDto) {
+    return this.articleService.findAll(query);
   }
 
   @Get(':id')
