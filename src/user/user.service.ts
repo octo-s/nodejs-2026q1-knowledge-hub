@@ -15,8 +15,18 @@ import { User } from './entities/user.entity';
 export class UserService {
   private users: User[] = [];
 
+  private toResponse(user: User): Omit<User, 'password'> {
+    return {
+      id: user.id,
+      login: user.login,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
   findAll(): Omit<User, 'password'>[] {
-    return this.users.map(({ password, ...rest }) => rest);
+    return this.users.map((user) => this.toResponse(user));
   }
 
   findOne(id: string): Omit<User, 'password'> {
@@ -27,8 +37,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const { password, ...rest } = user;
-    return rest;
+    return this.toResponse(user);
   }
 
   create(dto: CreateUserDto): Omit<User, 'password'> {
@@ -42,8 +51,7 @@ export class UserService {
       updatedAt: now,
     };
     this.users.push(user);
-    const { password, ...rest } = user;
-    return rest;
+    return this.toResponse(user);
   }
 
   update(id: string, dto: UpdatePasswordDto): Omit<User, 'password'> {
@@ -59,8 +67,7 @@ export class UserService {
     }
     user.password = dto.newPassword;
     user.updatedAt = Date.now();
-    const { password, ...rest } = user;
-    return rest;
+    return this.toResponse(user);
   }
 
   delete(id: string): void {
