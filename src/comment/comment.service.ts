@@ -11,6 +11,7 @@ import { validate as uuidValidate } from 'uuid';
 import { Comment } from './entities/comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ArticleService } from '../article/article.service';
+import { paginate, PaginatedResult } from '../common/pagination.dto';
 
 @Injectable()
 export class CommentService {
@@ -21,8 +22,12 @@ export class CommentService {
     private readonly articleService: ArticleService,
   ) {}
 
-  findByArticle(articleId: string): Comment[] {
-    return this.comments.filter((c) => c.articleId === articleId);
+  findByArticle(
+    articleId: string,
+    query?: { page?: number; limit?: number },
+  ): Comment[] | PaginatedResult<Comment> {
+    const result = this.comments.filter((c) => c.articleId === articleId);
+    return paginate(result, query?.page, query?.limit);
   }
 
   findOne(id: string): Comment {

@@ -8,11 +8,13 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { PaginationQueryDto } from '../common/pagination.dto';
 
 @ApiTags('Categories')
 @Controller('category')
@@ -22,8 +24,8 @@ export class CategoryController {
   @Get()
   @ApiOperation({ summary: 'Get all categories' })
   @ApiResponse({ status: 200 })
-  findAll() {
-    return this.categoryService.findAll();
+  findAll(@Query() query: PaginationQueryDto) {
+    return this.categoryService.findAll(query);
   }
 
   @Get(':id')

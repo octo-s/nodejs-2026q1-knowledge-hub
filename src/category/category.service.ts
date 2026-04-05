@@ -9,6 +9,7 @@ import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ArticleService } from '../article/article.service';
+import { paginate, PaginatedResult } from '../common/pagination.dto';
 
 @Injectable()
 export class CategoryService {
@@ -16,8 +17,11 @@ export class CategoryService {
 
   constructor(private readonly articleService: ArticleService) {}
 
-  findAll(): Category[] {
-    return this.categories;
+  findAll(query?: {
+    page?: number;
+    limit?: number;
+  }): Category[] | PaginatedResult<Category> {
+    return paginate(this.categories, query?.page, query?.limit);
   }
 
   findOne(id: string): Category {

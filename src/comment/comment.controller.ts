@@ -12,6 +12,8 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { PaginationQueryDto } from '../common/pagination.dto';
+import { CommentQueryDto } from './dto/comment-query.dto';
 
 @ApiTags('Comments')
 @Controller('comment')
@@ -22,8 +24,11 @@ export class CommentController {
   @ApiOperation({ summary: 'Get comments by article' })
   @ApiQuery({ name: 'articleId', required: true })
   @ApiResponse({ status: 200 })
-  findByArticle(@Query('articleId') articleId: string) {
-    return this.commentService.findByArticle(articleId);
+  findByArticle(
+    @Query('articleId') articleId: string,
+    @Query() query: CommentQueryDto,
+  ) {
+    return this.commentService.findByArticle(articleId, query);
   }
 
   @Get(':id')
