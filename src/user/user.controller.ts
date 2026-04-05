@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -13,6 +14,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { PaginationQueryDto } from '../common/pagination.dto';
 
 @ApiTags('Users')
 @Controller('user')
@@ -22,8 +24,8 @@ export class UserController {
   @Get()
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200 })
-  findAll() {
-    return this.userService.findAll();
+  findAll(@Query() query: PaginationQueryDto) {
+    return this.userService.findAll(query);
   }
 
   @Get(':id')

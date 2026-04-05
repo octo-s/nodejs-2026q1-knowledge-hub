@@ -14,6 +14,7 @@ import { UserRole } from '../common/enums';
 import { User } from './entities/user.entity';
 import { ArticleService } from '../article/article.service';
 import { CommentService } from '../comment/comment.service';
+import { paginate, PaginatedResult } from '../common/pagination.dto';
 
 @Injectable()
 export class UserService {
@@ -36,8 +37,12 @@ export class UserService {
     };
   }
 
-  findAll(): Omit<User, 'password'>[] {
-    return this.users.map((user) => this.toResponse(user));
+  findAll(query?: {
+    page?: number;
+    limit?: number;
+  }): Omit<User, 'password'>[] | PaginatedResult<Omit<User, 'password'>> {
+    const users = this.users.map((user) => this.toResponse(user));
+    return paginate(users, query?.page, query?.limit);
   }
 
   findOne(id: string): Omit<User, 'password'> {
