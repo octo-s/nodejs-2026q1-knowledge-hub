@@ -3,6 +3,8 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { validate as uuidValidate } from 'uuid';
@@ -10,10 +12,16 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UserRole } from '../common/enums';
 import { User } from './entities/user.entity';
+import { ArticleService } from '../article/article.service';
 
 @Injectable()
 export class UserService {
   private users: User[] = [];
+
+  constructor(
+    @Inject(forwardRef(() => ArticleService))
+    private readonly articleService: ArticleService,
+  ) {}
 
   private toResponse(user: User): Omit<User, 'password'> {
     return {
@@ -79,6 +87,6 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
     this.users.splice(index, 1);
-    // Каскадное удаление будет добавлено позже
+    this.articleService.nullifyAuthor(id);
   }
 }
