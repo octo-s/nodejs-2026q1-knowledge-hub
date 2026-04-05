@@ -13,6 +13,7 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UserRole } from '../common/enums';
 import { User } from './entities/user.entity';
 import { ArticleService } from '../article/article.service';
+import { CommentService } from '../comment/comment.service';
 
 @Injectable()
 export class UserService {
@@ -21,6 +22,8 @@ export class UserService {
   constructor(
     @Inject(forwardRef(() => ArticleService))
     private readonly articleService: ArticleService,
+    @Inject(forwardRef(() => CommentService))
+    private readonly commentService: CommentService,
   ) {}
 
   private toResponse(user: User): Omit<User, 'password'> {
@@ -88,5 +91,6 @@ export class UserService {
     }
     this.users.splice(index, 1);
     this.articleService.nullifyAuthor(id);
+    this.commentService.deleteByAuthor(id);
   }
 }
