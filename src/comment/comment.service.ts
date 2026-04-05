@@ -25,6 +25,17 @@ export class CommentService {
     return this.comments.filter((c) => c.articleId === articleId);
   }
 
+  findOne(id: string): Comment {
+    if (!uuidValidate(id)) {
+      throw new BadRequestException('Invalid UUID');
+    }
+    const comment = this.comments.find((c) => c.id === id);
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+    return comment;
+  }
+
   create(dto: CreateCommentDto): Comment {
     if (!this.articleService.exists(dto.articleId)) {
       throw new UnprocessableEntityException('Article not found');

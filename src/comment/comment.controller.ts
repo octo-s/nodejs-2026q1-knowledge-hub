@@ -26,6 +26,15 @@ export class CommentController {
     return this.commentService.findByArticle(articleId);
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get comment by id' })
+  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 400, description: 'Invalid UUID' })
+  @ApiResponse({ status: 404, description: 'Comment not found' })
+  findOne(@Param('id') id: string) {
+    return this.commentService.findOne(id);
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create comment' })
