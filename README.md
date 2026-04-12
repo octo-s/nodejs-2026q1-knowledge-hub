@@ -82,3 +82,23 @@ npm run format
 Press <kbd>F5</kbd> to debug.
 
 For more information, visit: https://code.visualstudio.com/docs/editor/debugging
+
+## Docker Hub
+
+Docker image: [tati31/knowledge-hub-api](https://hub.docker.com/r/tati31/knowledge-hub-api)
+
+## How to run
+
+```bash
+docker-compose up --build
+```
+
+## Security scan results
+No critical vulnerabilities found 
+
+48 vulnerabilities found in 18 packages
+CRITICAL     0  
+HIGH         24
+MEDIUM       20
+LOW          2  
+UNSPECIFIED  2  
