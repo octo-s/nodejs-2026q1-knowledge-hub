@@ -10,7 +10,7 @@ RUN npm ci
 
 COPY . .
 
-ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public"
+ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public&connection_limit=10&pool_timeout=20"
 ENV PRISMA_CLI_QUERY_ENGINE_TYPE=binary
 ENV PRISMA_CLIENT_ENGINE_TYPE=binary
 RUN npx prisma generate --no-engine
