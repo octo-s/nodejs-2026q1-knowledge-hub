@@ -49,7 +49,6 @@ export class CommentService {
       },
     });
   }
-
   async delete(id: string) {
     if (!uuidValidate(id)) {
       throw new BadRequestException('Invalid UUID');
@@ -59,5 +58,24 @@ export class CommentService {
       throw new NotFoundException('Comment not found');
     }
     await this.prisma.comment.delete({ where: { id } });
+  }
+
+  async findByArticle(
+    articleId: string,
+    query?: { page?: number; limit?: number },
+  ) {
+    if (!uuidValidate(articleId)) {
+      throw new BadRequestException('Invalid UUID');
+    }
+    const article = await this.prisma.article.findUnique({
+      where: { id: articleId },
+    });
+    if (!article) {
+      throw new UnprocessableEntityException('Article not found');
+    }
+    const comments = await this.prisma.comment.findMany({
+      where: { articleId },
+    });
+    return paginate(comments, query?.page, query?.limit);
   }
 }

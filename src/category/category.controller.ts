@@ -24,7 +24,7 @@ export class CategoryController {
   @Get()
   @ApiOperation({ summary: 'Get all categories' })
   @ApiResponse({ status: 200 })
-  findAll(@Query() query: PaginationQueryDto) {
+  async findAll(@Query() query: PaginationQueryDto) {
     return this.categoryService.findAll(query);
   }
 
@@ -33,7 +33,7 @@ export class CategoryController {
   @ApiResponse({ status: 200 })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.categoryService.findOne(id);
   }
 
@@ -42,7 +42,7 @@ export class CategoryController {
   @ApiOperation({ summary: 'Create category' })
   @ApiResponse({ status: 201 })
   @ApiResponse({ status: 400, description: 'Invalid input' })
-  create(@Body() dto: CreateCategoryDto) {
+  async create(@Body() dto: CreateCategoryDto) {
     return this.categoryService.create(dto);
   }
 
@@ -51,7 +51,7 @@ export class CategoryController {
   @ApiResponse({ status: 200 })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
+  async update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
     return this.categoryService.update(id, dto);
   }
 
@@ -61,7 +61,7 @@ export class CategoryController {
   @ApiResponse({ status: 204 })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  delete(@Param('id') id: string) {
+  async delete(@Param('id') id: string) {
     return this.categoryService.delete(id);
   }
 }
