@@ -102,3 +102,16 @@ HIGH         24
 MEDIUM       20
 LOW          2  
 UNSPECIFIED  2  
+
+### Overview
+Analyzed Image              
+
+Target: nodejs-2026q1-knowledge-hub_app:latest  
+digest: 8488f9c82e79                            
+platform: linux/amd64                              
+vulnerabilities :  0C    24H    20M     2L     2?        
+size: 96 MB                                    
+packages:  417                                      
+
+                                    
+
