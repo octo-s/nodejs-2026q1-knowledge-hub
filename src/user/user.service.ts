@@ -3,99 +3,102 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
-import { randomUUID } from 'node:crypto';
 import { validate as uuidValidate } from 'uuid';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
-import { UserRole } from '../common/enums';
-import { User } from './entities/user.entity';
-import { ArticleService } from '../article/article.service';
-import { CommentService } from '../comment/comment.service';
-import { paginate, PaginatedResult } from '../common/pagination.dto';
+import { paginate } from '../common/pagination.dto';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class UserService {
-  private users: User[] = [];
+  constructor(private readonly prisma: PrismaService) {}
 
-  constructor(
-    @Inject(forwardRef(() => ArticleService))
-    private readonly articleService: ArticleService,
-    @Inject(forwardRef(() => CommentService))
-    private readonly commentService: CommentService,
-  ) {}
-
-  private toResponse(user: User): Omit<User, 'password'> {
-    return {
-      id: user.id,
-      login: user.login,
-      role: user.role,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
+  private excludePassword<T extends { password?: string }>(user: T) {
+    const { password, ...result } = user;
+    return result;
   }
 
-  findAll(query?: {
-    page?: number;
-    limit?: number;
-  }): Omit<User, 'password'>[] | PaginatedResult<Omit<User, 'password'>> {
-    const users = this.users.map((user) => this.toResponse(user));
+  async findAll(query?: { page?: number; limit?: number }) {
+    const users = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        login: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
     return paginate(users, query?.page, query?.limit);
   }
 
-  findOne(id: string): Omit<User, 'password'> {
+  async findOne(id: string) {
     if (!uuidValidate(id)) {
       throw new BadRequestException('Invalid UUID');
     }
-    const user = this.users.find((u) => u.id === id);
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        login: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return this.toResponse(user);
+    return user;
   }
 
-  create(dto: CreateUserDto): Omit<User, 'password'> {
-    const now = Date.now();
-    const user: User = {
-      id: randomUUID(),
-      login: dto.login,
-      password: dto.password,
-      role: dto.role ?? UserRole.VIEWER,
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.users.push(user);
-    return this.toResponse(user);
+  async create(dto: CreateUserDto) {
+    const user = await this.prisma.user.create({
+      data: {
+        login: dto.login,
+        password: dto.password,
+        role: dto.role ? (dto.role.toUpperCase() as any) : undefined,
+      },
+    });
+    return this.excludePassword(user);
   }
 
-  update(id: string, dto: UpdatePasswordDto): Omit<User, 'password'> {
+  async update(id: string, dto: UpdatePasswordDto) {
     if (!uuidValidate(id)) {
       throw new BadRequestException('Invalid UUID');
     }
-    const user = this.users.find((u) => u.id === id);
+    const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
     if (user.password !== dto.oldPassword) {
       throw new ForbiddenException('Old password is wrong');
     }
-    user.password = dto.newPassword;
-    user.updatedAt = Date.now();
-    return this.toResponse(user);
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: { password: dto.newPassword },
+    });
+    return this.excludePassword(updated);
   }
 
-  delete(id: string): void {
+  async delete(id: string) {
     if (!uuidValidate(id)) {
       throw new BadRequestException('Invalid UUID');
     }
-    const index = this.users.findIndex((u) => u.id === id);
-    if (index === -1) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
       throw new NotFoundException('User not found');
     }
-    this.users.splice(index, 1);
-    this.articleService.nullifyAuthor(id);
-    this.commentService.deleteByAuthor(id);
+
+    await this.prisma.$transaction([
+      this.prisma.article.updateMany({
+        where: { authorId: id },
+        data: { authorId: null },
+      }),
+      this.prisma.comment.deleteMany({
+        where: { authorId: id },
+      }),
+      this.prisma.user.delete({ where: { id } }),
+    ]);
   }
 }
