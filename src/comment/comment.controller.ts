@@ -12,7 +12,6 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { PaginationQueryDto } from '../common/pagination.dto';
 import { CommentQueryDto } from './dto/comment-query.dto';
 
 @ApiTags('Comments')
@@ -24,7 +23,7 @@ export class CommentController {
   @ApiOperation({ summary: 'Get comments by article' })
   @ApiQuery({ name: 'articleId', required: true })
   @ApiResponse({ status: 200 })
-  findByArticle(
+  async findByArticle(
     @Query('articleId') articleId: string,
     @Query() query: CommentQueryDto,
   ) {
@@ -36,7 +35,7 @@ export class CommentController {
   @ApiResponse({ status: 200 })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Comment not found' })
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.commentService.findOne(id);
   }
 
@@ -46,7 +45,7 @@ export class CommentController {
   @ApiResponse({ status: 201 })
   @ApiResponse({ status: 400, description: 'Invalid input' })
   @ApiResponse({ status: 422, description: 'Article not found' })
-  create(@Body() dto: CreateCommentDto) {
+  async create(@Body() dto: CreateCommentDto) {
     return this.commentService.create(dto);
   }
 
@@ -56,7 +55,7 @@ export class CommentController {
   @ApiResponse({ status: 204 })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Comment not found' })
-  delete(@Param('id') id: string) {
+  async delete(@Param('id') id: string) {
     return this.commentService.delete(id);
   }
 }

@@ -3,76 +3,79 @@ import {
   NotFoundException,
   BadRequestException,
   UnprocessableEntityException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
-import { randomUUID } from 'node:crypto';
 import { validate as uuidValidate } from 'uuid';
-import { Comment } from './entities/comment.entity';
+import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { ArticleService } from '../article/article.service';
-import { paginate, PaginatedResult } from '../common/pagination.dto';
+import { paginate } from '../common/pagination.dto';
 
 @Injectable()
 export class CommentService {
-  private comments: Comment[] = [];
+  constructor(private readonly prisma: PrismaService) {}
 
-  constructor(
-    @Inject(forwardRef(() => ArticleService))
-    private readonly articleService: ArticleService,
-  ) {}
-
-  findByArticle(
-    articleId: string,
-    query?: { page?: number; limit?: number },
-  ): Comment[] | PaginatedResult<Comment> {
-    const result = this.comments.filter((c) => c.articleId === articleId);
-    return paginate(result, query?.page, query?.limit);
+  async findAll(query: { articleId: string; page?: number; limit?: number }) {
+    const comments = await this.prisma.comment.findMany({
+      where: { articleId: query.articleId },
+    });
+    return paginate(comments, query.page, query.limit);
   }
 
-  findOne(id: string): Comment {
+  async findOne(id: string) {
     if (!uuidValidate(id)) {
       throw new BadRequestException('Invalid UUID');
     }
-    const comment = this.comments.find((c) => c.id === id);
+    const comment = await this.prisma.comment.findUnique({ where: { id } });
     if (!comment) {
       throw new NotFoundException('Comment not found');
     }
     return comment;
   }
 
-  create(dto: CreateCommentDto): Comment {
-    if (!this.articleService.exists(dto.articleId)) {
-      throw new UnprocessableEntityException('Article not found');
+  async create(dto: CreateCommentDto) {
+    // Check article exists
+    const article = await this.prisma.article.findUnique({
+      where: { id: dto.articleId },
+    });
+    if (!article) {
+      throw new UnprocessableEntityException(
+        "Article with given articleId doesn't exist",
+      );
     }
-
-    const comment: Comment = {
-      id: randomUUID(),
-      content: dto.content,
-      articleId: dto.articleId,
-      authorId: dto.authorId ?? null,
-      createdAt: Date.now(),
-    };
-    this.comments.push(comment);
-    return comment;
+    return this.prisma.comment.create({
+      data: {
+        content: dto.content,
+        articleId: dto.articleId,
+        authorId: dto.authorId ?? null,
+      },
+    });
   }
-
-  delete(id: string): void {
+  async delete(id: string) {
     if (!uuidValidate(id)) {
       throw new BadRequestException('Invalid UUID');
     }
-    const index = this.comments.findIndex((c) => c.id === id);
-    if (index === -1) {
+    const comment = await this.prisma.comment.findUnique({ where: { id } });
+    if (!comment) {
       throw new NotFoundException('Comment not found');
     }
-    this.comments.splice(index, 1);
+    await this.prisma.comment.delete({ where: { id } });
   }
 
-  deleteByArticle(articleId: string): void {
-    this.comments = this.comments.filter((c) => c.articleId !== articleId);
-  }
-
-  deleteByAuthor(authorId: string): void {
-    this.comments = this.comments.filter((c) => c.authorId !== authorId);
+  async findByArticle(
+    articleId: string,
+    query?: { page?: number; limit?: number },
+  ) {
+    if (!uuidValidate(articleId)) {
+      throw new BadRequestException('Invalid UUID');
+    }
+    const article = await this.prisma.article.findUnique({
+      where: { id: articleId },
+    });
+    if (!article) {
+      throw new UnprocessableEntityException('Article not found');
+    }
+    const comments = await this.prisma.comment.findMany({
+      where: { articleId },
+    });
+    return paginate(comments, query?.page, query?.limit);
   }
 }

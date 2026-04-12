@@ -29,7 +29,7 @@ export class ArticleController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200 })
-  findAll(@Query() query: ArticleQueryDto) {
+  async findAll(@Query() query: ArticleQueryDto) {
     return this.articleService.findAll(query);
   }
 
@@ -38,7 +38,7 @@ export class ArticleController {
   @ApiResponse({ status: 200 })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Article not found' })
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.articleService.findOne(id);
   }
 
@@ -47,7 +47,7 @@ export class ArticleController {
   @ApiOperation({ summary: 'Create article' })
   @ApiResponse({ status: 201 })
   @ApiResponse({ status: 400, description: 'Invalid input' })
-  create(@Body() dto: CreateArticleDto) {
+  async create(@Body() dto: CreateArticleDto) {
     return this.articleService.create(dto);
   }
 
@@ -56,7 +56,7 @@ export class ArticleController {
   @ApiResponse({ status: 200 })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Article not found' })
-  update(@Param('id') id: string, @Body() dto: UpdateArticleDto) {
+  async update(@Param('id') id: string, @Body() dto: UpdateArticleDto) {
     return this.articleService.update(id, dto);
   }
 
@@ -66,7 +66,7 @@ export class ArticleController {
   @ApiResponse({ status: 204 })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Article not found' })
-  delete(@Param('id') id: string) {
+  async delete(@Param('id') id: string) {
     return this.articleService.delete(id);
   }
 }
