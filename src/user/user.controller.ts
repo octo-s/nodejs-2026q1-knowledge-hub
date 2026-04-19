@@ -9,12 +9,17 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { PaginationQueryDto } from '../common/pagination.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { JwtPayload } from '../auth/auth.types';
+import { UserRole } from '../common/enums';
 
 @ApiTags('Users')
 @Controller('user')
@@ -38,6 +43,7 @@ export class UserController {
   }
 
   @Post()
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create user' })
   @ApiResponse({ status: 201 })
@@ -52,11 +58,19 @@ export class UserController {
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 403, description: 'Wrong old password' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  update(@Param('id') id: string, @Body() dto: UpdatePasswordDto) {
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdatePasswordDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    if (user.role !== UserRole.ADMIN && user.userId !== id) {
+      throw new ForbiddenException('You can change only your own password');
+    }
     return this.userService.update(id, dto);
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete user' })
   @ApiResponse({ status: 204 })

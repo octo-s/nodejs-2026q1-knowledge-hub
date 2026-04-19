@@ -13,6 +13,10 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CommentQueryDto } from './dto/comment-query.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { JwtPayload } from '../auth/auth.types';
+import { UserRole } from '../common/enums';
 
 @ApiTags('Comments')
 @Controller('comment')
@@ -40,22 +44,28 @@ export class CommentController {
   }
 
   @Post()
+  @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create comment' })
   @ApiResponse({ status: 201 })
   @ApiResponse({ status: 400, description: 'Invalid input' })
   @ApiResponse({ status: 422, description: 'Article not found' })
-  async create(@Body() dto: CreateCommentDto) {
-    return this.commentService.create(dto);
+  async create(@Body() dto: CreateCommentDto, @CurrentUser() user: JwtPayload) {
+    const authorId =
+      user.role === UserRole.ADMIN
+        ? (dto.authorId ?? user.userId)
+        : user.userId;
+    return this.commentService.create({ ...dto, authorId });
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete comment' })
   @ApiResponse({ status: 204 })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Comment not found' })
-  async delete(@Param('id') id: string) {
-    return this.commentService.delete(id);
+  async delete(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return this.commentService.delete(id, user);
   }
 }

@@ -3,11 +3,14 @@ import {
   NotFoundException,
   BadRequestException,
   UnprocessableEntityException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { validate as uuidValidate } from 'uuid';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { paginate } from '../common/pagination.dto';
+import { JwtPayload } from '../auth/auth.types';
+import { UserRole } from '../common/enums';
 
 @Injectable()
 export class CommentService {
@@ -32,7 +35,6 @@ export class CommentService {
   }
 
   async create(dto: CreateCommentDto) {
-    // Check article exists
     const article = await this.prisma.article.findUnique({
       where: { id: dto.articleId },
     });
@@ -49,13 +51,20 @@ export class CommentService {
       },
     });
   }
-  async delete(id: string) {
+  async delete(id: string, currentUser?: JwtPayload) {
     if (!uuidValidate(id)) {
       throw new BadRequestException('Invalid UUID');
     }
     const comment = await this.prisma.comment.findUnique({ where: { id } });
     if (!comment) {
       throw new NotFoundException('Comment not found');
+    }
+    if (
+      currentUser &&
+      currentUser.role === UserRole.EDITOR &&
+      comment.authorId !== currentUser.userId
+    ) {
+      throw new ForbiddenException('You can delete only your own comments');
     }
     await this.prisma.comment.delete({ where: { id } });
   }

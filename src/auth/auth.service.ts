@@ -72,6 +72,13 @@ export class AuthService {
   }
 
   private async generateTokens(payload: JwtPayload): Promise<AuthTokens> {
+    const normalizedPayload: JwtPayload = {
+      ...payload,
+      role: (typeof payload.role === 'string'
+        ? payload.role.toLowerCase()
+        : payload.role) as JwtPayload['role'],
+    };
+
     const accessSecret = process.env.JWT_SECRET;
     const refreshSecret = process.env.JWT_REFRESH_SECRET;
     const accessTtl = process.env.JWT_ACCESS_TTL ?? '15m';
@@ -82,11 +89,11 @@ export class AuthService {
     }
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync(normalizedPayload, {
         secret: accessSecret,
         expiresIn: accessTtl,
       } as any),
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync(normalizedPayload, {
         secret: refreshSecret,
         expiresIn: refreshTtl,
       } as any),
