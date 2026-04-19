@@ -19,7 +19,6 @@ export class AuthService {
   ) {}
 
   async signup(dto: SignupDto) {
-    // UserService.create will hash the password and check uniqueness
     return this.userService.create({
       login: dto.login,
       password: dto.password,
@@ -36,6 +35,33 @@ export class AuthService {
     const passwordMatches = await bcrypt.compare(dto.password, user.password);
     if (!passwordMatches) {
       throw new ForbiddenException('Authentication failed');
+    }
+
+    return this.generateTokens({
+      userId: user.id,
+      login: user.login,
+      role: user.role as unknown as UserRole,
+    });
+  }
+
+  async refresh(refreshToken: string): Promise<AuthTokens> {
+    const refreshSecret = process.env.JWT_REFRESH_SECRET;
+    if (!refreshSecret) {
+      throw new BadRequestException('JWT secrets are not configured');
+    }
+
+    let payload: JwtPayload;
+    try {
+      payload = await this.jwtService.verifyAsync<JwtPayload>(refreshToken, {
+        secret: refreshSecret,
+      });
+    } catch {
+      throw new ForbiddenException('Invalid or expired refresh token');
+    }
+
+    const user = await this.userService.findByLoginWithPassword(payload.login);
+    if (!user || user.id !== payload.userId) {
+      throw new ForbiddenException('Invalid or expired refresh token');
     }
 
     return this.generateTokens({
