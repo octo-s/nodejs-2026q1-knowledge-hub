@@ -15,6 +15,8 @@ import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { PaginationQueryDto } from '../common/pagination.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../common/enums';
 
 @ApiTags('Categories')
 @Controller('category')
@@ -38,6 +40,7 @@ export class CategoryController {
   }
 
   @Post()
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create category' })
   @ApiResponse({ status: 201 })
@@ -47,6 +50,7 @@ export class CategoryController {
   }
 
   @Put(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Update category' })
   @ApiResponse({ status: 200 })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
@@ -56,6 +60,7 @@ export class CategoryController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete category' })
   @ApiResponse({ status: 204 })

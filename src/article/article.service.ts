@@ -2,12 +2,15 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { validate as uuidValidate } from 'uuid';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { paginate } from '../common/pagination.dto';
+import { JwtPayload } from '../auth/auth.types';
+import { UserRole } from '../common/enums';
 
 function mapArticleStatus(status: string): string {
   return status.toLowerCase();
@@ -113,13 +116,21 @@ export class ArticleService {
     return this.formatArticle(article);
   }
 
-  async update(id: string, dto: UpdateArticleDto) {
+  async update(id: string, dto: UpdateArticleDto, currentUser?: JwtPayload) {
     if (!uuidValidate(id)) {
       throw new BadRequestException('Invalid UUID');
     }
     const existing = await this.prisma.article.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException('Article not found');
+    }
+
+    if (
+      currentUser &&
+      currentUser.role === UserRole.EDITOR &&
+      existing.authorId !== currentUser.userId
+    ) {
+      throw new ForbiddenException('You can edit only your own articles');
     }
 
     const data: any = {};
@@ -150,13 +161,20 @@ export class ArticleService {
     return this.formatArticle(article);
   }
 
-  async delete(id: string) {
+  async delete(id: string, currentUser?: JwtPayload) {
     if (!uuidValidate(id)) {
       throw new BadRequestException('Invalid UUID');
     }
     const article = await this.prisma.article.findUnique({ where: { id } });
     if (!article) {
       throw new NotFoundException('Article not found');
+    }
+    if (
+      currentUser &&
+      currentUser.role === UserRole.EDITOR &&
+      article.authorId !== currentUser.userId
+    ) {
+      throw new ForbiddenException('You can delete only your own articles');
     }
     await this.prisma.article.delete({ where: { id } });
   }
