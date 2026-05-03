@@ -150,9 +150,12 @@ export class AiService {
 
   async generate(dto: GenerateDto): Promise<{ text: string }> {
     this.usage.recordRequest('generate');
-    const prompt = this.prompts.generic(dto.prompt);
+    const context = this.conversation.getContext(dto.sessionId);
+    const prompt = this.prompts.generic(dto.prompt, context);
     const result = await this.callGemini(prompt);
-    return { text: result.text.trim() };
+    const text = result.text.trim();
+    this.conversation.append(dto.sessionId, dto.prompt, text);
+    return { text };
   }
 
   private async callGemini(prompt: string): Promise<GeminiCallResult> {
