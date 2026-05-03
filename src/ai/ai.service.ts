@@ -184,7 +184,7 @@ export class AiService {
     return article;
   }
 
-  private tryParseJson<T>(raw: string): T | null {
+  private tryParseJson<T = unknown>(raw: string): T | null {
     if (!raw) return null;
     const cleaned = raw
       .trim()
