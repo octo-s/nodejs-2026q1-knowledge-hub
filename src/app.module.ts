@@ -10,6 +10,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
     ArticleModule,
     CommentModule,
     CategoryModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [
