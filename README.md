@@ -111,7 +111,18 @@ digest: 8488f9c82e79
 platform: linux/amd64                              
 vulnerabilities :  0C    24H    20M     2L     2?        
 size: 96 MB                                    
-packages:  417                                      
+packages:  417                
 
+
+
+## Gemini API Setup
+
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Sign in with a Google account.
+3. Click **Create API key** → choose / create a Google Cloud project.
+4. Copy the generated key.
+5. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
                                     
 
